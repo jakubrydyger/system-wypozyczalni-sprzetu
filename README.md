@@ -1,6 +1,6 @@
 ----------------
 
-# Wymagania
+## Wymagania
 Node.js = wersja 18.0 lub nowsza
 
 ----------------
