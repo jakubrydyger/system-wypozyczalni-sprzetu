@@ -7,7 +7,7 @@ Node.js = wersja 18.0 lub nowsza
 1) npm install
 2) npm start
 
-Aplikacja widoczna na porcie http://localhost:3000
+```bash Aplikacja widoczna na porcie http://localhost:3000 
 ----------------
 
 Dane do logowania dwóch utworzonych już użytkowników:
