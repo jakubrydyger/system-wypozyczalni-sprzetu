@@ -13,6 +13,8 @@ Node.js = wersja 18.0 lub nowsza
 Dane do logowania dwóch utworzonych już użytkowników:
 
 Nazwa: login/hasło
+
 User: user/user123
+
 Admin: admin/admin123
 ----------------
