@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Raporty techniczne - RentalPro</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <h1>🔧 Raporty techniczne</h1>
+            <div>
+                <a href="/equipment">🛠️ Sprzęt</a>
+                <a href="/logout">🚪 Wyloguj</a>
+            </div>
+        </nav>
+        
+        <div class="card">
+            <h2>Zgłoś problem techniczny</h2>
+            <form method="POST" action="/reports">
+                <select name="equipment_id" required>
+                    <option value="">Wybierz sprzęt</option>
+                    <optgroup label="Elektronika">
+                        <option value="1">Laptop Dell Latitude 5540</option>
+                        <option value="2">Laptop MacBook Pro 16"</option>
+                        <option value="3">Laptop Lenovo ThinkPad X1</option>
+                        <option value="4">Laptop HP Spectre x360</option>
+                        <option value="5">Projektor Epson EB-X51</option>
+                        <option value="6">Projektor BenQ MW560</option>
+                        <option value="7">Monitor LG 27" 4K UltraFine</option>
+                        <option value="8">Monitor Dell 32" Curved</option>
+                        <option value="9">Drukarka HP LaserJet Pro</option>
+                        <option value="10">Drukarka 3D Creality Ender</option>
+                        <option value="11">Tablet Samsung Galaxy Tab S9</option>
+                        <option value="12">Tablet iPad Pro 12.9"</option>
+                        <option value="13">Słuchawki Sony WH-1000XM5</option>
+                        <option value="14">Słuchawki Apple AirPods Max</option>
+                        <option value="15">Konsola PlayStation 5</option>
+                        <option value="16">Konsola Xbox Series X</option>
+                        <option value="17">Router WiFi 6 Mesh</option>
+                        <option value="18">Powerbank 20000mAh</option>
+                    </optgroup>
+                    <optgroup label="Fotografia">
+                        <option value="19">Kamera GoPro Hero 11 Black</option>
+                        <option value="20">Kamera DJI Osmo Action 4</option>
+                        <option value="21">Aparat Canon EOS R6 Mark II</option>
+                        <option value="22">Aparat Sony A7 IV</option>
+                        <option value="23">Aparat Nikon Z6 III</option>
+                        <option value="24">Stabilizator DJI Ronin RS 3</option>
+                        <option value="25">Oświetlenie studyjne LED 3-punktowe</option>
+                        <option value="26">Statyw Manfrotto 290 Xtra</option>
+                        <option value="27">Obiektyw Canon 24-70mm f/2.8</option>
+                        <option value="28">Dron DJI Mini 4 Pro</option>
+                        <option value="29">Lampa błyskowa Godox V1</option>
+                    </optgroup>
+                    <optgroup label="Sport">
+                        <option value="30">Namiot 4-osobowy Quechua</option>
+                        <option value="31">Namiot 2-osobowy turystyczny</option>
+                        <option value="32">Rower górski Trek Marlin 7</option>
+                        <option value="33">Rower elektryczny Giant Explore</option>
+                        <option value="34">Rower szosowy Specialized</option>
+                        <option value="35">Kajak dmuchany Intex Explorer</option>
+                        <option value="36">Narty Head Shape V8 + kijki</option>
+                        <option value="37">Deska surfingowa 7ft</option>
+                        <option value="38">Deska snowboardowa Burton</option>
+                        <option value="39">Rolki K2 FIT 80</option>
+                        <option value="40">Hulajnoga elektryczna Xiaomi</option>
+                        <option value="41">Piłka nożna profesjonalna</option>
+                    </optgroup>
+                    <optgroup label="Audio">
+                        <option value="42">Mikrofon Shure SM58</option>
+                        <option value="43">Mikrofon Rode NT1-A</option>
+                        <option value="44">Głośnik JBL PartyBox 310</option>
+                        <option value="45">Głośnik Marshall Stanmore II</option>
+                        <option value="46">Mikser Behringer X32</option>
+                        <option value="47">Wzmacniacz gitarowy Marshall DSL40</option>
+                        <option value="48">Gitara elektryczna Fender Stratocaster</option>
+                        <option value="49">Klawiatura MIDI Arturia KeyLab</option>
+                        <option value="50">Słuchawki studyjne Beyerdynamic</option>
+                        <option value="51">Interfejs audio Focusrite Scarlett</option>
+                    </optgroup>
+                    <optgroup label="Narzędzia">
+                        <option value="52">Wiertarka Bosch GSB 18V</option>
+                        <option value="53">Szlifierka kątowa Makita</option>
+                        <option value="54">Myjka ciśnieniowa Karcher K5</option>
+                        <option value="55">Drabina aluminiowa 6m</option>
+                        <option value="56">Zestaw narzędzi 100el. Profi</option>
+                        <option value="57">Spawarka inwertorowa 200A</option>
+                        <option value="58">Wkrętarka akumulatorowa DeWalt</option>
+                        <option value="59">Piła tarczowa Bosch</option>
+                        <option value="60">Szlifierka oscylacyjna</option>
+                        <option value="61">Miernik laserowy Bosch</option>
+                        <option value="62">Agregat prądotwórczy 2kW</option>
+                        <option value="63">Odkurzacz przemysłowy Karcher</option>
+                    </optgroup>
+                </select>
+                <textarea name="description" placeholder="Opisz problem techniczny..." rows="4" required></textarea>
+                <button type="submit">📤 Zgłoś problem</button>
+            </form>
+        </div>
+        
+        <div class="reports-list">
+            <h2 style="color: white; margin-bottom: 20px;">Zgłoszone raporty</h2>
+            <% if (reports && reports.length > 0) { %>
+                <% reports.forEach(report => { %>
+                    <div class="report-card">
+                        <h4>🔧 <%= report.equipment_name %></h4>
+                        <p><small>Zgłoszony przez: <strong><%= report.username %></strong></small></p>
+                        <p><%= report.description %></p>
+                        <small style="color: #a0aec0;"><%= new Date(report.created_at).toLocaleString() %></small>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="card" style="text-align: center;">
+                    <p style="color: #718096;">Brak zgłoszonych raportów</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logowanie - RentalPro</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>🚀 RentalPro</h1>
+            <% if (locals.success) { %>
+                <div class="alert success"><%= success %></div>
+            <% } %>
+            <% if (locals.error) { %>
+                <div class="alert error"><%= error %></div>
+            <% } %>
+            <form method="POST" action="/login">
+                <div class="input-group">
+                    <input type="text" name="username" placeholder="👤 Nazwa użytkownika" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" name="password" placeholder="🔒 Hasło" required>
+                </div>
+                <button type="submit">Zaloguj się</button>
+            </form>
+            <p>Nie masz konta? <a href="/register">Zarejestruj się</a></p>
+        </div>
+    </div>
+</body>
+</html>

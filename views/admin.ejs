@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel Admina - RentalPro</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .admin-table th {
+            padding: 15px;
+            text-align: left;
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        
+        .admin-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        
+        .admin-table tr:hover {
+            background: #f7fafc;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 8px;
+            white-space: nowrap;
+            width: auto;
+            min-width: 100px;
+        }
+        
+        .price-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 0;
+        }
+        
+        .price-form input {
+            width: 90px;
+            padding: 8px;
+            font-size: 13px;
+            margin: 0;
+        }
+        
+        .price-form button {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        
+        .inline-form {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <h1>👑 Panel Administratora</h1>
+            <div>
+                <a href="/equipment">🛠️ Sprzęt</a>
+                <a href="/my-reservations">📋 Rezerwacje</a>
+                <a href="/logout">🚪 Wyloguj</a>
+            </div>
+        </nav>
+        
+        <% if (locals.success) { %>
+            <div class="alert success"><%= success %></div>
+        <% } %>
+        <% if (locals.error) { %>
+            <div class="alert error"><%= error %></div>
+        <% } %>
+        
+        <div class="card">
+            <h2>🔧 Zarządzanie sprzętem</h2>
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">ID</th>
+                            <th>Nazwa</th>
+                            <th style="width: 120px;">Kategoria</th>
+                            <th style="width: 140px;">Status</th>
+                            <th style="width: 100px;">Cena/dzień</th>
+                            <th style="width: 300px;">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% equipment.forEach(eq => { %>
+                            <tr>
+                                <td><%= eq.id %></td>
+                                <td><strong><%= eq.name %></strong></td>
+                                <td><span class="category-badge category-<%= eq.category %>"><%= eq.category %></span></td>
+                                <td><span class="status-<%= eq.status === 'Dostępny' ? 'available' : eq.status === 'Zarezerwowany' ? 'reserved' : eq.status === 'W serwisie' ? 'maintenance' : 'active' %>"><%= eq.status %></span></td>
+                                <td><strong><%= eq.daily_rate %> PLN</strong></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <% if (eq.status !== 'Dostępny') { %>
+                                            <form method="POST" action="/admin/restore-equipment/<%= eq.id %>" class="inline-form">
+                                                <button type="submit" class="btn-return btn-sm">✅ Przywróć</button>
+                                            </form>
+                                        <% } else { %>
+                                            <div style="width: 112px;"></div>
+                                        <% } %>
+                                        <form method="POST" action="/admin/update-price/<%= eq.id %>" class="price-form">
+                                            <input type="number" name="price" step="0.01" min="0" value="<%= eq.daily_rate %>">
+                                            <button type="submit">💰 Aktualizuj cenę</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📋 Wszystkie rezerwacje</h2>
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">ID</th>
+                            <th>Użytkownik</th>
+                            <th>Sprzęt</th>
+                            <th style="width: 200px;">Okres</th>
+                            <th style="width: 120px;">Status</th>
+                            <th style="width: 120px;">Płatność</th>
+                            <th style="width: 100px;">Kwota</th>
+                            <th style="width: 120px;">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% reservations.forEach(res => { %>
+                            <tr>
+                                <td><%= res.id %></td>
+                                <td><strong><%= res.username %></strong></td>
+                                <td><%= res.equipment_name %></td>
+                                <td><%= res.start_date %> - <%= res.end_date %></td>
+                                <td><span class="status-<%= res.status === 'Wypożyczony' ? 'active' : res.status === 'Oczekująca' ? 'pending' : res.status === 'Zwrócony' ? 'returned' : res.status === 'Anulowana' ? 'returned' : 'reserved' %>"><%= res.status %></span></td>
+                                <td><span class="<%= res.payment_status === 'Opłacona' ? 'status-available' : 'status-reserved' %>"><%= res.payment_status %></span></td>
+                                <td><strong><%= res.total_amount %> PLN</strong></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <% if (res.status === 'Wypożyczony' || res.status === 'Oczekująca') { %>
+                                            <form method="POST" action="/admin/cancel-reservation/<%= res.id %>" class="inline-form">
+                                                <button type="submit" class="btn-cancel btn-sm">❌ Anuluj</button>
+                                            </form>
+                                        <% } else if (res.status === 'Zwrócony') { %>
+                                            <span style="color: #48bb78; font-weight: 500;">✅ Zwrócony</span>
+                                        <% } else if (res.status === 'Anulowana') { %>
+                                            <span style="color: #a0aec0; font-weight: 500;">Anulowana</span>
+                                        <% } else { %>
+                                            <span style="color: #a0aec0;">-</span>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>👥 Użytkownicy</h2>
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">ID</th>
+                            <th>Nazwa</th>
+                            <th>Email</th>
+                            <th style="width: 100px;">Rola</th>
+                            <th style="width: 120px;">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(u => { %>
+                            <tr>
+                                <td><%= u.id %></td>
+                                <td><strong><%= u.username %></strong></td>
+                                <td><%= u.email %></td>
+                                <td><span class="category-badge <%= u.role === 'admin' ? 'category-Audio' : 'category-Sport' %>"><%= u.role %></span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <% if (u.role !== 'admin') { %>
+                                            <form method="POST" action="/admin/delete-user/<%= u.id %>" class="inline-form"
+                                                  onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?')">
+                                                <button type="submit" class="btn-cancel btn-sm">🗑️ Usuń</button>
+                                            </form>
+                                        <% } else { %>
+                                            <span style="color: #a0aec0; font-weight: 500;">Admin</span>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

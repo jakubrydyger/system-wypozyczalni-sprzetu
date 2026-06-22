@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sprzęt - RentalPro</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <h1>🛠️ RentalPro</h1>
+            <div style="position: relative;">
+                <% if (user.role === 'admin') { %>
+                    <a href="/admin">👑 Panel Admina</a>
+                <% } %>
+                <a href="/my-reservations">📋 Moje rezerwacje</a>
+                <a href="/reports">🔧 Raporty</a>
+                <div class="notification-bell-wrapper">
+                    <a href="#" class="notification-bell" onclick="toggleNotifications(event)">
+                        🔔 Powiadomienia
+                        <% if (notificationCount > 0) { %>
+                            <span class="notification-badge"><%= notificationCount %></span>
+                        <% } %>
+                    </a>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Powiadomienia</h3>
+                            <button onclick="readAllNotifications(event)">Oznacz wszystkie</button>
+                        </div>
+                        <div id="notificationList">
+                            <div class="notification-empty">Ładowanie...</div>
+                        </div>
+                    </div>
+                </div>
+                <a href="/logout">🚪 Wyloguj</a>
+            </div>
+        </nav>
+        
+        <% if (locals.success) { %>
+            <div class="alert success"><%= success %></div>
+        <% } %>
+        <% if (locals.error) { %>
+            <div class="alert error"><%= error %></div>
+        <% } %>
+        
+        <div class="card" style="padding: 15px; margin-bottom: 25px;">
+            <div class="filter-buttons">
+                <button onclick="filterCategory('all')" style="background: #667eea;">Wszystkie</button>
+                <button onclick="filterCategory('Elektronika')">💻 Elektronika</button>
+                <button onclick="filterCategory('Fotografia')">📸 Fotografia</button>
+                <button onclick="filterCategory('Sport')">⚽ Sport</button>
+                <button onclick="filterCategory('Audio')">🎵 Audio</button>
+                <button onclick="filterCategory('Narzędzia')">🔨 Narzędzia</button>
+            </div>
+        </div>
+        
+        <div class="equipment-grid" id="equipmentGrid">
+            <% equipment.forEach(eq => { %>
+                <div class="equipment-card" data-category="<%= eq.category %>">
+                    <span class="category-badge category-<%= eq.category %>"><%= eq.category %></span>
+                    <h3><%= eq.name %></h3>
+                    <p>Status: <span class="status-<%= eq.status === 'Dostępny' ? 'available' : eq.status === 'Zarezerwowany' ? 'reserved' : eq.status === 'W serwisie' ? 'maintenance' : eq.status === 'Wypożyczony' ? 'active' : 'returned' %>"><%= eq.status %></span></p>
+                    <div class="price"><%= eq.daily_rate %> PLN <span style="font-size: 14px;">/ dzień</span></div>
+                    
+                    <div class="reserve-section">
+                        <% if (eq.status === 'Dostępny') { %>
+                            <form method="POST" action="/reserve" class="reserve-form" onsubmit="return checkDateLimit(this)">
+                                <input type="hidden" name="equipment_id" value="<%= eq.id %>">
+                                <div class="date-row">
+                                    <div class="date-col">
+                                        <label>📅 Data od</label>
+                                        <input type="date" name="start_date" class="start-date" required 
+                                               min="<%= new Date().toISOString().split('T')[0] %>">
+                                    </div>
+                                    <div class="date-col">
+                                        <label>📅 Data do</label>
+                                        <input type="date" name="end_date" class="end-date" required 
+                                               min="<%= new Date().toISOString().split('T')[0] %>">
+                                    </div>
+                                </div>
+                                <button type="submit">📅 Zarezerwuj</button>
+                            </form>
+                        <% } else if (eq.status === 'Zarezerwowany') { %>
+                            <button disabled>🔒 Zarezerwowany</button>
+                        <% } else if (eq.status === 'Wypożyczony') { %>
+                            <button disabled>📦 Wypożyczony</button>
+                        <% } else if (eq.status === 'W serwisie') { %>
+                            <button disabled>🔧 W serwisie</button>
+                        <% } else { %>
+                            <button disabled>🚫 Niedostępny</button>
+                        <% } %>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+    
+    <script>
+    function filterCategory(category) {
+        const cards = document.querySelectorAll('.equipment-card');
+        cards.forEach(card => {
+            if (category === 'all' || card.dataset.category === category) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
+    function checkDateLimit(form) {
+        const startInput = form.querySelector('.start-date');
+        const endInput = form.querySelector('.end-date');
+        
+        if (startInput.value && endInput.value) {
+            const startDate = new Date(startInput.value);
+            const endDate = new Date(endInput.value);
+            const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff > 30) {
+                alert('Maksymalny okres wypożyczenia to 30 dni');
+                return false;
+            }
+            
+            if (daysDiff < 1) {
+                alert('Data zakończenia musi być późniejsza niż data rozpoczęcia');
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    function toggleNotifications(event) {
+        event.preventDefault();
+        const dropdown = document.getElementById('notificationDropdown');
+        dropdown.classList.toggle('show');
+        
+        if (dropdown.classList.contains('show')) {
+            loadNotifications();
+        }
+    }
+    
+    function loadNotifications() {
+        fetch('/notifications')
+            .then(response => response.json())
+            .then(notifications => {
+                const list = document.getElementById('notificationList');
+                if (notifications.length === 0) {
+                    list.innerHTML = '<div class="notification-empty">Brak powiadomień</div>';
+                } else {
+                    list.innerHTML = notifications.map(n => 
+                        '<div class="notification-item ' + (n.is_read ? '' : 'unread') + '" onclick="markAsRead(' + n.id + ')">' +
+                            '<div class="message">' + n.message + '</div>' +
+                            '<div class="time">' + new Date(n.created_at).toLocaleString() + '</div>' +
+                        '</div>'
+                    ).join('');
+                }
+            });
+    }
+    
+    function markAsRead(id) {
+        fetch('/notifications/read/' + id, { method: 'POST' })
+            .then(() => {
+                loadNotifications();
+                location.reload();
+            });
+    }
+    
+    function readAllNotifications(event) {
+        event.stopPropagation();
+        fetch('/notifications/read-all', { method: 'POST' })
+            .then(() => {
+                loadNotifications();
+                location.reload();
+            });
+    }
+    
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('notificationDropdown');
+        const bell = document.querySelector('.notification-bell');
+        if (dropdown && !dropdown.contains(event.target) && !bell.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+    </script>
+</body>
+</html>

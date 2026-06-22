@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Moje rezerwacje - RentalPro</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <h1>📋 Moje rezerwacje</h1>
+            <div style="position: relative;">
+                <a href="/equipment">🛠️ Sprzęt</a>
+                <div class="notification-bell-wrapper">
+                    <a href="#" class="notification-bell" onclick="toggleNotifications(event)">
+                        🔔 Powiadomienia
+                        <% if (notificationCount > 0) { %>
+                            <span class="notification-badge"><%= notificationCount %></span>
+                        <% } %>
+                    </a>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Powiadomienia</h3>
+                            <button onclick="readAllNotifications(event)">Oznacz wszystkie</button>
+                        </div>
+                        <div id="notificationList">
+                            <div class="notification-empty">Ładowanie...</div>
+                        </div>
+                    </div>
+                </div>
+                <a href="/logout">🚪 Wyloguj</a>
+            </div>
+        </nav>
+        
+        <div class="reservations-list">
+            <% if (reservations && reservations.length > 0) { %>
+                <% reservations.forEach(res => { %>
+                    <div class="reservation-card">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h3><%= res.equipment_name %></h3>
+                                <p>📅 Okres: <strong><%= res.start_date %></strong> - <strong><%= res.end_date %></strong></p>
+                                <p>Status rezerwacji: <span class="status-<%= res.status === 'Wypożyczony' ? 'active' : res.status === 'Oczekująca' ? 'pending' : res.status === 'Zwrócony' ? 'returned' : 'reserved' %>"><%= res.status %></span></p>
+                                <p>Płatność: <span class="<%= res.payment_status === 'Opłacona' ? 'status-available' : 'status-reserved' %>">
+                                    <%= res.payment_status %></span></p>
+                                <p style="font-size: 18px; font-weight: 600; color: #667eea;">
+                                    💰 <%= res.total_amount %> PLN
+                                </p>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <% if (res.status === 'Wypożyczony') { %>
+                                    <form method="POST" action="/return/<%= res.id %>">
+                                        <button type="submit" class="btn-return">✅ Zwróć sprzęt</button>
+                                    </form>
+                                <% } %>
+                                
+                                <% if (res.payment_status === 'Nieopłacona') { %>
+                                    <button onclick="processPayment('<%= res.id %>', '<%= res.equipment_name %>', '<%= res.total_amount %>')" 
+                                            class="btn-report">
+                                        💳 Opłać teraz
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="card" style="text-align: center;">
+                    <p style="font-size: 18px; color: #718096;">📭 Brak aktywnych rezerwacji</p>
+                    <a href="/equipment" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 12px 24px; border-radius: 10px; color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        Przeglądaj sprzęt
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+    
+    <div id="paymentPopup" class="payment-popup">
+        <div class="payment-popup-content">
+            <div class="checkmark">✅</div>
+            <h2 id="popupTitle">Płatność zrealizowana!</h2>
+            <p id="popupMessage"></p>
+            <button onclick="closePopup()">OK</button>
+        </div>
+    </div>
+    
+    <script>
+    async function processPayment(reservationId, equipmentName, amount) {
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = '⏳ Przetwarzanie...';
+        button.disabled = true;
+        
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            const response = await fetch('/payment/' + reservationId, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('popupTitle').textContent = '✅ Płatność zrealizowana!';
+                document.getElementById('popupMessage').innerHTML = 
+                    'Sprzęt: <strong>' + equipmentName + '</strong><br>Kwota: <strong>' + amount + ' PLN</strong><br><br>Dziękujemy za płatność!';
+                document.getElementById('paymentPopup').style.display = 'flex';
+                
+                setTimeout(() => { location.reload(); }, 2000);
+            } else {
+                alert('Wystąpił błąd podczas płatności. Spróbuj ponownie.');
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        } catch (error) {
+            console.error('Błąd:', error);
+            alert('Wystąpił błąd podczas płatności. Spróbuj ponownie.');
+            button.textContent = originalText;
+            button.disabled = false;
+        }
+    }
+    
+    function closePopup() {
+        document.getElementById('paymentPopup').style.display = 'none';
+        location.reload();
+    }
+    
+    function toggleNotifications(event) {
+        event.preventDefault();
+        const dropdown = document.getElementById('notificationDropdown');
+        dropdown.classList.toggle('show');
+        
+        if (dropdown.classList.contains('show')) {
+            loadNotifications();
+        }
+    }
+    
+    function loadNotifications() {
+        fetch('/notifications')
+            .then(response => response.json())
+            .then(notifications => {
+                const list = document.getElementById('notificationList');
+                if (notifications.length === 0) {
+                    list.innerHTML = '<div class="notification-empty">Brak powiadomień</div>';
+                } else {
+                    list.innerHTML = notifications.map(n => 
+                        '<div class="notification-item ' + (n.is_read ? '' : 'unread') + '" onclick="markAsRead(' + n.id + ')">' +
+                            '<div class="message">' + n.message + '</div>' +
+                            '<div class="time">' + new Date(n.created_at).toLocaleString() + '</div>' +
+                        '</div>'
+                    ).join('');
+                }
+            });
+    }
+    
+    function markAsRead(id) {
+        fetch('/notifications/read/' + id, { method: 'POST' })
+            .then(() => {
+                loadNotifications();
+                location.reload();
+            });
+    }
+    
+    function readAllNotifications(event) {
+        event.stopPropagation();
+        fetch('/notifications/read-all', { method: 'POST' })
+            .then(() => {
+                loadNotifications();
+                location.reload();
+            });
+    }
+    
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('notificationDropdown');
+        const bell = document.querySelector('.notification-bell');
+        if (dropdown && !dropdown.contains(event.target) && !bell.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+    </script>
+</body>
+</html>
