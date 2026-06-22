@@ -14,9 +14,10 @@ Aplikacja widoczna na porcie http://localhost:3000
 
 Dane do logowania dwóch utworzonych już użytkowników:
 
-Nazwa: login/hasło
+**Nazwa: login/hasło**
 
 User: user/user123
 
 Admin: admin/admin123
+
 ----------------
