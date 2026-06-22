@@ -1,11 +1,11 @@
 ----------------
 
-## Wymagania
+Wymagania
 Node.js = wersja 18.0 lub nowsza
 
 ----------------
 
-# Instrukcja uruchomienia projektu
+Instrukcja uruchomienia projektu
 
 ```bash
 npm install 
