@@ -4,9 +4,10 @@ Node.js = wersja 18.0 lub nowsza
 ----------------
 # Instrukcja uruchomienia projektu
 
-```bash  npm install  ```
- ```bash npm start  ```
-
+```bash
+npm install 
+npm start
+```
 
 Aplikacja widoczna na porcie http://localhost:3000 
 ----------------
